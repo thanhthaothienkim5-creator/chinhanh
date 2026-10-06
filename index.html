@@ -31,6 +31,8 @@ h2{font-size:19px;margin:4px 0 0}
 .row:last-child{border-bottom:none}
 .amt{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
 .bar{height:8px;border-radius:5px;background:var(--m)}
+.alias{margin:2px 0 8px;font-size:14px;padding:9px 12px}
+.caprow{display:flex;gap:10px}.caprow .btn{flex:1}.btn.ghost2{background:transparent;color:var(--m);border:1.5px solid var(--m)}
 .btn{display:block;width:100%;border:none;background:var(--m);color:#fff;border-radius:14px;padding:15px;font-size:16px;font-weight:700;margin-top:14px;cursor:pointer}
 .btn.ghost{background:var(--chip);color:var(--md)}
 .btn.sm{width:auto;display:inline-block;padding:9px 14px;font-size:13px;margin:4px 4px 0 0;border-radius:11px}
@@ -122,7 +124,7 @@ h2{font-size:19px;margin:4px 0 0}
     </div>
     <div id="capPhoto"></div>
     <div id="capPreview"></div>
-    <button class="btn" id="capSave">✓ Lưu</button>
+    <div class="caprow"><button class="btn ghost2" id="capClear">✕ Xoá, nói lại</button><button class="btn" id="capSave">✓ Lưu</button></div>
     <input type="file" id="photoInput" accept="image/*" style="display:none"/>
   </section>
 
@@ -207,6 +209,7 @@ function parseAmounts(text){
   re=/(\d+)\s*tr(\d)?\b/g;while((m=re.exec(t)))push(parseInt(m[1])*1e6+(m[2]?parseInt(m[2])*1e5:0),m[0],m.index,.95);
   re=/(\d+(?:[.,]\d+)?)\s*triệu(\s*(?:rưỡi|rưởi))?/g;while((m=re.exec(t)))push(parseFloat(m[1].replace(',','.'))*1e6+(m[2]?5e5:0),m[0],m.index,.96);
   re=/(\d+)\s*củ(\s*(?:rưỡi|rưởi))?/g;while((m=re.exec(t)))push(parseInt(m[1])*1e6+(m[2]?5e5:0),m[0],m.index,.9);
+  re=/(?:^|\s)(\d{1,3}(?:[.,]\d{3})+)(?![.,]?\d)/g;while((m=re.exec(t)))push(parseInt(m[1].replace(/[.,]/g,'')),m[0],m.index,.93);
   re=/(?:^|\s)(\d{4,})(?=\s|$|đ|d\b)/g;while((m=re.exec(t)))push(parseInt(m[1]),m[0],m.index,.85);
   re=/(\d+)\s*(?:nghìn|ngàn)(\s*(?:rưỡi|rưởi))?/g;while((m=re.exec(t)))push(parseInt(m[1])*1000+(m[2]?500:0),m[0],m.index,.96);
   // word form (hai trăm rưỡi / ba triệu...)
@@ -229,11 +232,12 @@ const CATS=[
 ['Phí & dịch vụ','',['phí','ship','phí ship','thẻ','dịch vụ']]];
 const DEF_PEOPLE=['Mẹ','Bố','Con','Vợ','Chồng','Ông bà','Anh chị em','Bạn bè'];
 let cfg=JSON.parse(localStorage.getItem('chinhanh_cfg')||'null')||{cats:CATS.slice(0,10).map(x=>x[0]),people:['Mẹ','Bố','Con'],custom:[]};
+cfg.alias=cfg.alias||{};
 function saveCfg(){localStorage.setItem('chinhanh_cfg',JSON.stringify(cfg));}
 function catOn(c){return cfg.cats.includes(c);}
 function allPeople(){return [...cfg.people,...cfg.custom];}
 const esc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-function classify(text){const t=text.toLowerCase();let type='EXPENSE';if(/rút\s*atm|rút tiền/.test(t))type='TRANSFER';if(/chuyển.*(từ|sang)/.test(t)&&/(tài khoản|bank|ngân hàng|vcb|techcom|mb|vietcom)/.test(t))type='TRANSFER';if(/hoàn tiền|hoàn lại|refund/.test(t))type='REFUND';let cat='Khác',icon='💰',conf=.4;for(const[c,ic,kw]of CATS){if(!catOn(c))continue;if(kw.some(k=>t.includes(k))){cat=c;icon=ic;conf=.88;break;}}let person=null;for(const p of allPeople()){if(new RegExp('(^|\\s)'+esc(p.toLowerCase())+'(\\s|$|,)').test(t)){person=p;break;}}if(!person){let pm=text.match(/cho\s+([A-ZÀ-Ỹ][a-zà-ỹ]+)/);if(pm)person=pm[1];else{pm=text.match(/cho\s+(mẹ|má|ba|bố|con|vợ|chồng|bà|ông|em|anh|chị)(?:\s|$)/i);if(pm)person=pm[1];}}return{type,cat,icon,conf,person};}
+function classify(text){const t=text.toLowerCase();let type='EXPENSE';if(/rút\s*atm|rút tiền/.test(t))type='TRANSFER';if(/chuyển.*(từ|sang)/.test(t)&&/(tài khoản|bank|ngân hàng|vcb|techcom|mb|vietcom)/.test(t))type='TRANSFER';if(/hoàn tiền|hoàn lại|refund/.test(t))type='REFUND';let cat='Khác',icon='💰',conf=.4;for(const[c,ic,kw]of CATS){if(!catOn(c))continue;if(kw.some(k=>t.includes(k))){cat=c;icon=ic;conf=.88;break;}}let person=null;for(const p of allPeople()){for(const a of (cfg.alias[p]||[])){if(new RegExp('(^|\\s)'+esc(a.toLowerCase())+'(\\s|$|,)').test(t)){person=(a[0]!==a[0].toLowerCase())?a:p;break;}}if(person)break;}if(!person)for(const p of allPeople()){if(new RegExp('(^|\\s)'+esc(p.toLowerCase())+'(\\s|$|,)').test(t)){person=p;break;}}if(!person){let pm=text.match(/cho\s+([A-ZÀ-Ỹ][a-zà-ỹ]+)/);if(pm)person=pm[1];else{pm=text.match(/cho\s+(mẹ|má|ba|bố|con|vợ|chồng|bà|ông|em|anh|chị)(?:\s|$)/i);if(pm)person=pm[1];}}return{type,cat,icon,conf,person};}
 function parseSentence(text){const parts=text.split(/\s*,\s*|\s+và\s+/).filter(x=>x.trim());const dr=[];for(const p of parts){const am=parseAmounts(p);if(!am.length)continue;const pr=am.slice().sort((a,b)=>b.conf-a.conf)[0];const cl=classify(p);const multi=am.length>1;dr.push({amount:pr.value,amountConf:pr.conf,multi,desc:(p.replace(pr.raw,'').replace(/\s+/g,' ').trim()||cl.cat),cat:cl.cat,icon:cl.icon,catConf:cl.conf,person:cl.person,type:cl.type,needReview:pr.conf<.9||multi});}if(!dr.length){const am=parseAmounts(text);if(am.length){const cl=classify(text);dr.push({amount:am[0].value,amountConf:am[0].conf,desc:text,cat:cl.cat,icon:cl.icon,catConf:cl.conf,person:cl.person,type:cl.type,needReview:am[0].conf<.9});}}return dr;}
 
 // ===== state =====
@@ -310,6 +314,7 @@ if(SR){
   rec.onerror=()=>{recOn=false;micBtn.classList.remove('on');document.getElementById('micHint').textContent='Chạm mic để nói, hoặc gõ ở dưới';};
   rec.onresult=e=>{let s='';for(const r of e.results)s+=r[0].transcript;capIn.value=s;previewCap();};
 }
+document.getElementById('capClear').addEventListener('click',()=>{const was=recOn;stopVoice();capIn.value='';drafts=[];document.getElementById('capPreview').innerHTML='';document.getElementById('capPhoto').innerHTML='';window._pendingPhoto=null;setTimeout(()=>{capIn.value='';startVoice();},was?400:50);});
 micBtn.addEventListener('click',()=>{if(recOn)stopVoice();else startVoice();});
 // chạm vùng trống khi đang nghe = nói xong
 document.getElementById('s-capture').addEventListener('click',e=>{if(recOn&&!e.target.closest('.mic,.input,.btn,.ex,.draftcard')){stopVoice();}});
@@ -325,10 +330,12 @@ document.getElementById('importFile').addEventListener('change',e=>{const f=e.ta
 // cài đặt danh mục + nhân vật
 function renderCfg(){
  document.getElementById('catCfg').innerHTML=CATS.map(([c,,kw])=>`<label class="ck"><input type="checkbox" ${catOn(c)?'checked':''} onchange="toggleCat('${c}',this.checked)"/><span><b>${c}</b><br><span class="sub">${kw.slice(0,6).join(', ')}</span></span></label>`).join('')+'<label class="ck"><input type="checkbox" checked disabled/><span><b>Khác</b><br><span class="sub">luôn bật, dành cho khoản quá khó xếp</span></span></label>';
- document.getElementById('pplCfg').innerHTML=DEF_PEOPLE.map(p=>`<label class="ck sm"><input type="checkbox" ${cfg.people.includes(p)?'checked':''} onchange="togglePerson('${p}',this.checked)"/><span>${p}</span></label>`).join('')+cfg.custom.map(p=>`<label class="ck sm"><input type="checkbox" checked onchange="if(!this.checked)removePerson('${p}')"/><span>${p}</span></label>`).join('');
+ document.getElementById('pplCfg').innerHTML=DEF_PEOPLE.map(p=>`<label class="ck sm"><input type="checkbox" ${cfg.people.includes(p)?'checked':''} onchange="togglePerson('${p}',this.checked)"/><span>${p}</span></label>${cfg.people.includes(p)?aliasIn(p):''}`).join('')+cfg.custom.map(p=>`<label class="ck sm"><input type="checkbox" checked onchange="if(!this.checked)removePerson('${p}')"/><span>${p}</span></label>`).join('');
 }
+function aliasIn(p){return `<input class="input alias" placeholder="Tên gọi của ${p} (vd: ${p==='Con'?'Bống, Bông':p==='Chồng'?'ông xã, Ân':p==='Mẹ'?'má, mạ':'cách nhau dấu phẩy'})" value="${(cfg.alias[p]||[]).join(', ')}" onchange="setAlias('${p}',this.value)"/>`;}
+function setAlias(p,v){cfg.alias[p]=v.split(',').map(x=>x.trim()).filter(Boolean);saveCfg();}
 function toggleCat(c,on){cfg.cats=on?[...new Set([...cfg.cats,c])]:cfg.cats.filter(x=>x!==c);saveCfg();}
-function togglePerson(p,on){cfg.people=on?[...new Set([...cfg.people,p])]:cfg.people.filter(x=>x!==p);saveCfg();}
+function togglePerson(p,on){cfg.people=on?[...new Set([...cfg.people,p])]:cfg.people.filter(x=>x!==p);saveCfg();renderCfg();}
 function removePerson(p){cfg.custom=cfg.custom.filter(x=>x!==p);saveCfg();renderCfg();}
 function addPerson(){const i=document.getElementById('newPerson');const v=i.value.trim();if(!v)return;if(!allPeople().some(x=>x.toLowerCase()===v.toLowerCase()))cfg.custom.push(v);i.value='';saveCfg();renderCfg();}
 renderCfg();
@@ -339,7 +346,7 @@ function catOptions(sel){return [...CATS.map(x=>x[0]).filter(c=>catOn(c)||c===se
 function editTxn(id){const t=txns.find(x=>x.id===id);if(!t)return;editId=id;
  document.getElementById('eAmt').value=t.amount;document.getElementById('eDesc').value=t.desc;
  document.getElementById('eCat').innerHTML=catOptions(t.cat);
- document.getElementById('ePerson').innerHTML='<option value="">Bản thân / không ghi</option>'+[...new Set([...allPeople(),...(t.person?[t.person]:[])])].map(p=>`<option ${p===t.person?'selected':''}>${p}</option>`).join('');
+ document.getElementById('ePerson').innerHTML='<option value="">Bản thân / không ghi</option>'+[...new Set([...allPeople(),...Object.values(cfg.alias).flat().filter(a=>(a[0]!==a[0].toLowerCase())),...(t.person?[t.person]:[])])].map(p=>`<option ${p===t.person?'selected':''}>${p}</option>`).join('');
  document.getElementById('eType').value=t.type;
  document.getElementById('ePhoto').innerHTML=t.photo?`<img src="${t.photo}" style="width:100%;border-radius:10px;margin-top:8px"/>`:'';
  document.getElementById('editSheet').classList.add('on');}
