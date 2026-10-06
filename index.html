@@ -321,7 +321,33 @@ document.getElementById('s-capture').addEventListener('click',e=>{if(recOn&&!e.t
 
 // photo
 function addPhoto(){document.getElementById('photoInput').click();}
-document.getElementById('photoInput').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{go('capture');window._pendingPhoto=r.result;document.getElementById('capPhoto').innerHTML=`<div class="draftcard"><img src="${r.result}" style="width:100%;border-radius:10px;display:block"/><div class="sub" style="margin-top:6px">📷 Đã đính kèm hình — gõ hoặc nói số tiền để lưu (vd "250k ăn trưa")</div></div>`;setTimeout(()=>capIn.focus(),150);};r.readAsDataURL(f);e.target.value='';});
+document.getElementById('photoInput').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{go('capture');window._pendingPhoto=r.result;document.getElementById('capPhoto').innerHTML=`<div class="draftcard"><img src="${r.result}" style="width:100%;border-radius:10px;display:block"/><div class="sub" style="margin-top:6px">📷 Đã đính kèm hình — gõ hoặc nói số tiền để lưu (vd "250k ăn trưa")</div></div>`;ocrPhoto(r.result);};r.readAsDataURL(f);e.target.value='';});
+
+// ===== đọc số liệu từ hình (OCR chạy ngay trên máy) =====
+function loadTess(){return window.Tesseract?Promise.resolve():new Promise((ok,no)=>{const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';sc.onload=ok;sc.onerror=no;document.head.appendChild(sc);});}
+function ocrMsg(t){const el=document.querySelector('#capPhoto .sub');if(el)el.textContent=t;}
+function extractFromOcr(raw){
+  const lines=raw.split(/\n+/).map(x=>x.trim()).filter(Boolean);const low=raw.toLowerCase();
+  const num=x=>parseInt(x.replace(/[^\d]/g,''));
+  let best=null;
+  const pref=[/(?:số tiền|so tien|tổng thanh toán|tong thanh toan|thành tiền|tổng cộng|tổng tiền|amount|thanh toán)[^\d\n]{0,20}([\d][\d.,\s]{2,14}\d)/i,
+    /[-+]?\s?(\d{1,3}(?:[.,]\d{3})+)\s*(?:vnd|vnđ|đ|d\b|₫)/i,
+    /(?:vnd|vnđ|₫)\s*(\d{1,3}(?:[.,]\d{3})+)/i];
+  for(const re of pref){const m=raw.match(re);if(m){const v=num(m[1]);if(v>=1000&&v<1e10){best=v;break;}}}
+  if(!best){const all=[...raw.matchAll(/(\d{1,3}(?:[.,]\d{3})+)(?![.,]?\d)/g)].map(m=>num(m[1])).filter(v=>v>=1000&&v<1e10);if(all.length)best=Math.max(...all);}
+  let note='';const ki=lines.findIndex(l=>/nội dung|noi dung|lời nhắn|loi nhan|description|diễn giải|ghi chú/i.test(l));
+  if(ki>=0){note=lines[ki].replace(/^.*?(nội dung|noi dung|lời nhắn|loi nhan|description|diễn giải|ghi chú)[^:]*:?/i,'').trim();if(note.length<3&&lines[ki+1])note=lines[ki+1];}
+  if(!note){if(/shopee/i.test(low))note='shopee';else if(/lazada/i.test(low))note='lazada';else if(/grab/i.test(low))note='grab';else if(/tiki/i.test(low))note='tiki';}
+  if(!note&&/chuyển tiền|chuyen tien|chuyển khoản|transfer/i.test(low))note='chuyển khoản';
+  return {amount:best,note:note.slice(0,60)};
+}
+async function ocrPhoto(dataUrl){
+  ocrMsg('Đang đọc số liệu trong hình… (lần đầu hơi lâu ~10-20 giây)');
+  try{await loadTess();const res=await Tesseract.recognize(dataUrl,'vie+eng');const x=extractFromOcr(res.data.text||'');
+    if(x.amount){capIn.value=(x.note||'thanh toán')+' '+x.amount;previewCap();showSaveIfAny();ocrMsg('Đã đọc: '+VND(x.amount)+(x.note?' — '+x.note:'')+'. Kiểm tra rồi bấm Lưu, sai thì chạm sửa.');}
+    else{ocrMsg('Chưa đọc được số tiền trong hình — chị nói hoặc gõ số tiền giúp em nhé');setTimeout(()=>capIn.focus(),150);}
+  }catch(err){ocrMsg('Không đọc được hình (cần mạng lần đầu) — chị gõ số tiền giúp em nhé');setTimeout(()=>capIn.focus(),150);}
+}
 
 // export / import
 function exportData(){const blob=new Blob([JSON.stringify({app:'chinhanh',version:1,exportedAt:new Date().toISOString(),txns},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='chinhanh-backup.json';a.click();URL.revokeObjectURL(url);}
