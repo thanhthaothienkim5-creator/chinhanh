@@ -217,19 +217,18 @@ function parseAmounts(text){
   while((m=re.exec(t))){let base=wordsToNumber(m[1]);if(base==null||base===0)continue;let v=base;if(m[2]&&base%100===0&&base<1000)v=base+50;if(v<1000)v=v*1000;/*ngữ cảnh khoản chi: "hai trăm rưỡi"=250.000, "hai chục"=20.000*/push(v,m[0],m.index,.8);}
   out.sort((a,b)=>a.idx-b.idx);const dd=[];for(const o of out){const cl=dd.find(d=>Math.abs(d.idx-o.idx)<3||o.raw.includes(d.raw)||d.raw.includes(o.raw));if(cl){if(o.conf>cl.conf)Object.assign(cl,o);}else dd.push(o);}return dd;
 }
-const CATS=[
-['Hiếu hỷ','',['sinh nhật','đám cưới','đám tang','đám giỗ','mừng','quà','lì xì','phong bì','biếu']],
-['Hoá đơn','',['tiền điện','tiền nước','hoá đơn','hóa đơn','internet','wifi','cước','gói cước','gas','rác','phí quản lý','gia hạn','cước điện thoại','nạp tiền']],
-['Ăn uống','',['mì','mỳ','quảng','bún','phở','cơm','bánh','cà phê','cafe','trà sữa','ăn','uống','nhậu','quán','nhà hàng','đồ ăn','grabfood','shopeefood','baemin','siêu thị','chợ','thực phẩm','rau','thịt','trái cây','sữa']],
-['Đi lại','',['grab','taxi','xăng','dầu','gửi xe','vé xe','vé máy bay','máy bay','bus','xe khách','sửa xe','rửa xe','be ']],
-['Nhà cửa','',['tiền nhà','thuê nhà','sửa nhà','nội thất','đồ gia dụng','gia dụng','dọn nhà']],
-['Con cái & học','',['học phí','tiền học','đi học','khóa học','sách','vở','bút','bỉm','tã','đồ chơi','sữa bột']],
-['Sức khoẻ','',['thuốc','khám','bệnh','bác sĩ','nha khoa','viện','xét nghiệm','vitamin','phòng khám']],
-['Làm đẹp','',['mỹ phẩm','son','skincare','spa','làm tóc','cắt tóc','nail','gội đầu']],
-['Mua sắm','',['shopee','shoppee','lazada','tiki','sendo','tiktok shop','đặt hàng','order','mua online','áo','quần','giày','dép','túi','mua sắm']],
-['Giải trí','',['phim','rạp','game','nhạc','spotify','netflix','du lịch','chơi','karaoke','bar']],
-['Công việc','',['văn phòng','in ấn','tiếp khách','công tác','hoa hồng']],
-['Phí & dịch vụ','',['phí','ship','phí ship','thẻ','dịch vụ']]];
+const CATS=[["Hiếu hỷ","",["sinh nhật","đám cưới","đám tang","đám giỗ","đám hỏi","mừng","quà","quà tặng","lì xì","phong bì","biếu","viếng","thăm bệnh","tân gia","đầy tháng","thôi nôi"]],
+["Hoá đơn","",["tiền điện","tiền nước","hoá đơn","hóa đơn","internet","wifi","cước","gói cước","gas","tiền rác","phí quản lý","gia hạn","cước điện thoại","điện thoại trả sau","truyền hình","fpt","vnpt","viettel"]],
+["Ăn uống","",["ăn","uống","mì","mỳ","mì quảng","mỳ quảng","bún","phở","cơm","bánh mì","bánh","cà phê","cafe","cf","trà sữa","nhậu","nhà hàng","đồ ăn","ăn sáng","ăn trưa","ăn tối","ăn vặt","grabfood","shopeefood","baemin","thực phẩm","rau","thịt","cá","trái cây","hoa quả","nước ngọt","bia","lẩu","nướng","bún bò","bánh xèo","chè","kem",["siêu thị",0.5],["chợ",0.6],["quán",0.4],["sữa",0.5]]],
+["Đi lại","",["grab","taxi","xăng","đổ xăng","dầu","gửi xe","vé xe","vé máy bay","máy bay","bus","xe buýt","xe khách","sửa xe","rửa xe","be","xanh sm","gojek","cầu đường","phí đường bộ","thay nhớt","vá xe"]],
+["Nhà cửa","",["tiền nhà","thuê nhà","sửa nhà","nội thất","đồ gia dụng","gia dụng","dọn nhà","điện máy","sửa máy","máy lạnh","tủ lạnh","máy giặt","giúp việc","chăn","gối","nệm"]],
+["Con cái & học","",["học phí","tiền học","đi học","khoá học","khóa học","học thêm","sách","vở","bút","bỉm","tã","đồ chơi","sữa bột","đồng phục","trường","cô giáo","mầm non","nhà trẻ","bé","con"]],
+["Sức khoẻ","",["thuốc","khám","khám bệnh","bệnh","bác sĩ","nha khoa","răng","làm răng","nhổ răng","niềng răng","trám răng","viện","bệnh viện","xét nghiệm","vitamin","phòng khám","tiêm","vắc xin","vaccine","mắt kính","bảo hiểm y tế"]],
+["Làm đẹp","",["mỹ phẩm","son","skincare","spa","làm tóc","cắt tóc","uốn tóc","nhuộm tóc","nail","làm móng","gội đầu","massage","nối mi","kem chống nắng","nước hoa"]],
+["Mua sắm","",["shopee","shoppee","lazada","tiki","sendo","tiktok shop","đặt hàng","order","mua online","áo","quần","giày","dép","túi","mua sắm","váy","đầm","đồng hồ","điện thoại mới",["mua",0.3]]],
+["Giải trí","",["phim","xem phim","rạp","cgv","lotte","game","chơi game","nạp game","nạp thẻ game","nhạc","spotify","netflix","youtube premium","du lịch","chơi","đi chơi","karaoke","bar","vé","khu vui chơi","bowling","bi-a","bida","resort","khách sạn"]],
+["Công việc","",["văn phòng","văn phòng phẩm","in ấn","tiếp khách","công tác","hoa hồng","photo","môi giới","quảng cáo","chạy ads","ads"]],
+["Phí & dịch vụ","",["phí","phí ship","ship","phí chuyển","phí dịch vụ","dịch vụ","phí ngân hàng","phí thường niên","phí rút"]]];
 const DEF_PEOPLE=['Mẹ','Bố','Con','Vợ','Chồng','Ông bà','Anh chị em','Bạn bè'];
 let cfg=JSON.parse(localStorage.getItem('chinhanh_cfg')||'null')||{cats:CATS.slice(0,10).map(x=>x[0]),people:['Mẹ','Bố','Con'],custom:[]};
 cfg.alias=cfg.alias||{};
@@ -237,8 +236,28 @@ function saveCfg(){localStorage.setItem('chinhanh_cfg',JSON.stringify(cfg));}
 function catOn(c){return cfg.cats.includes(c);}
 function allPeople(){return [...cfg.people,...cfg.custom];}
 const esc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-function classify(text){const t=text.toLowerCase();let type='EXPENSE';if(/rút\s*atm|rút tiền/.test(t))type='TRANSFER';if(/chuyển.*(từ|sang)/.test(t)&&/(tài khoản|bank|ngân hàng|vcb|techcom|mb|vietcom)/.test(t))type='TRANSFER';if(/hoàn tiền|hoàn lại|refund/.test(t))type='REFUND';let cat='Khác',icon='💰',conf=.4;for(const[c,ic,kw]of CATS){if(!catOn(c))continue;if(kw.some(k=>t.includes(k))){cat=c;icon=ic;conf=.88;break;}}let person=null;for(const p of allPeople()){for(const a of (cfg.alias[p]||[])){if(new RegExp('(^|\\s)'+esc(a.toLowerCase())+'(\\s|$|,)').test(t)){person=(a[0]!==a[0].toLowerCase())?a:p;break;}}if(person)break;}if(!person)for(const p of allPeople()){if(new RegExp('(^|\\s)'+esc(p.toLowerCase())+'(\\s|$|,)').test(t)){person=p;break;}}if(!person){let pm=text.match(/cho\s+([A-ZÀ-Ỹ][a-zà-ỹ]+)/);if(pm)person=pm[1];else{pm=text.match(/cho\s+(mẹ|má|ba|bố|con|vợ|chồng|bà|ông|em|anh|chị)(?:\s|$)/i);if(pm)person=pm[1];}}return{type,cat,icon,conf,person};}
-function parseSentence(text){const parts=text.split(/\s*,\s*|\s+và\s+/).filter(x=>x.trim());const dr=[];for(const p of parts){const am=parseAmounts(p);if(!am.length)continue;const pr=am.slice().sort((a,b)=>b.conf-a.conf)[0];const cl=classify(p);const multi=am.length>1;dr.push({amount:pr.value,amountConf:pr.conf,multi,desc:(p.replace(pr.raw,'').replace(/\s+/g,' ').trim()||cl.cat),cat:cl.cat,icon:cl.icon,catConf:cl.conf,person:cl.person,type:cl.type,needReview:pr.conf<.9||multi});}if(!dr.length){const am=parseAmounts(text);if(am.length){const cl=classify(text);dr.push({amount:am[0].value,amountConf:am[0].conf,desc:text,cat:cl.cat,icon:cl.icon,catConf:cl.conf,person:cl.person,type:cl.type,needReview:am[0].conf<.9});}}return dr;}
+const WB='[^\\p{L}\\p{N}]';
+function hasW(t,k){return new RegExp('(^|'+WB+')'+esc(k)+'(?='+WB+'|$)','u').test(t);}
+function learnKey(x){return (x||'').toLowerCase().replace(/\d[\d.,]*\s*(k|nghìn|ngàn|triệu|tr|củ|đồng|đ|vnd)?/gu,' ').replace(/[^\p{L}\s]/gu,' ').replace(/\b(cho|mua|tiền|của|đi|và)\b/gu,' ').replace(/\s+/g,' ').trim();}
+cfg.learn=cfg.learn||{};cfg.learnW=cfg.learnW||{};
+function learnFrom(desc,cat,person){const k=learnKey(desc);if(!k)return;cfg.learn[k]={cat,person:person||null};
+ for(const w of k.split(' ')){if(w.length<2)continue;const m=cfg.learnW[w]=cfg.learnW[w]||{};m[cat]=(m[cat]||0)+1;}saveCfg();}
+function findPeople(t){const out=[];for(const p of allPeople()){for(const a of (cfg.alias[p]||[])){const al=a.toLowerCase();if(al&&hasW(t,al)){const name=(a[0]!==a[0].toLowerCase())?a:p;if(!out.includes(name))out.push(name);}}}
+ for(const p of allPeople()){if(hasW(t,p.toLowerCase())&&!out.some(x=>x===p||(cfg.alias[p]||[]).includes(x)))out.push(p);}return out;}
+function classify(text){const t=text.toLowerCase();let type='EXPENSE';if(/rút\s*atm|rút tiền/.test(t))type='TRANSFER';if(/chuyển.*(từ|sang)/.test(t)&&/(tài khoản|bank|ngân hàng|vcb|techcom|mb|vietcom)/.test(t))type='TRANSFER';if(/hoàn tiền|hoàn lại|refund/.test(t))type='REFUND';
+ const sc={};for(const[c,ic,kw]of CATS){if(!catOn(c))continue;let v=0;for(const it of kw){const[k,w]=Array.isArray(it)?it:[it,1];if(hasW(t,k))v+=w*(1+k.split(' ').length*.5);}if(v>0)sc[c]=v;}
+ {const pp=findPeople(t);const kid=c=>c==='Con'||(cfg.alias['Con']||[]).includes(c);if(pp.some(kid)&&catOn('Con cái & học'))sc['Con cái & học']=(sc['Con cái & học']||0)+.8;}
+ const lk=learnKey(text);const mem=cfg.learn[lk];
+ for(const w of lk.split(' ')){const m=cfg.learnW[w];if(!m)continue;for(const c in m)if(catOn(c)||c==='Khác')sc[c]=(sc[c]||0)+1.5*m[c];}
+ const rank=Object.entries(sc).sort((x,y)=>y[1]-x[1]);
+ let cat='Khác',conf=.3;
+ if(mem&&mem.cat){cat=mem.cat;conf=.97;}
+ else if(rank.length){cat=rank[0][0];const top=rank[0][1],sec=rank[1]?rank[1][1]:0;conf=(top>=1&&top>=sec*1.6)?.9:.55;}
+ const alts=rank.map(x=>x[0]).filter(c=>c!==cat).slice(0,3);
+ let ppl=findPeople(t);let person=mem&&mem.person?mem.person:(ppl[0]||null);
+ if(!person){let pm=text.match(/cho\s+(\p{Lu}\p{Ll}+)/u);if(pm)person=pm[1];}
+ return{type,cat,icon:'',conf,alts,person,people:ppl};}
+function parseSentence(text){const _all=findPeople(text.toLowerCase());const parts=text.split(/\s*,\s*|\s+và\s+/).filter(x=>x.trim());const dr=[];for(const p of parts){const am=parseAmounts(p);if(!am.length)continue;const pr=am.slice().sort((a,b)=>b.conf-a.conf)[0];const cl=classify(p);const multi=am.length>1;dr.push({amount:pr.value,amountConf:pr.conf,multi,desc:(p.replace(pr.raw,'').replace(/\s+/g,' ').trim()||cl.cat),cat:cl.cat,icon:cl.icon,catConf:cl.conf,person:cl.person,alts:cl.alts,src:p,type:cl.type,needReview:pr.conf<.9||multi});}if(!dr.length){const am=parseAmounts(text);if(am.length){const cl=classify(text);dr.push({amount:am[0].value,amountConf:am[0].conf,desc:text,cat:cl.cat,icon:cl.icon,catConf:cl.conf,person:cl.person,type:cl.type,needReview:am[0].conf<.9});}}return dr;}
 
 // ===== state =====
 const VND=n=>n==null?'—':n.toLocaleString('vi-VN')+'đ';
@@ -287,7 +306,7 @@ function renderReport(){
 
 // capture
 const capIn=document.getElementById('capInput');
-function previewCap(){drafts=parseSentence(capIn.value);const el=document.getElementById('capPreview');const btn=document.getElementById('capSave');if(!drafts.length){el.innerHTML='';return;}el.innerHTML=drafts.map(d=>`<div class="draftcard"><div style="display:flex;justify-content:space-between"><div><span class="chip">${d.icon} ${d.cat}</span>${d.person?`<span class="chip">👤 ${d.person}</span>`:''}${d.type!=='EXPENSE'?`<span class="chip">${d.type}</span>`:''}${d.needReview?'<span class="chip warn">⚠ xem lại</span>':''}<div class="sub" style="margin-top:4px">${d.desc}</div></div><div class="amt">${VND(d.amount)}</div></div></div>`).join('');btn.style.display='block';}
+function previewCap(){setTimeout(addSugg,0);drafts=parseSentence(capIn.value);const el=document.getElementById('capPreview');const btn=document.getElementById('capSave');if(!drafts.length){el.innerHTML='';return;}el.innerHTML=drafts.map(d=>`<div class="draftcard"><div style="display:flex;justify-content:space-between"><div><span class="chip">${d.icon} ${d.cat}</span>${d.person?`<span class="chip">👤 ${d.person}</span>`:''}${d.type!=='EXPENSE'?`<span class="chip">${d.type}</span>`:''}${d.needReview?'<span class="chip warn">⚠ xem lại</span>':''}<div class="sub" style="margin-top:4px">${d.desc}</div></div><div class="amt">${VND(d.amount)}</div></div></div>`).join('');btn.style.display='block';}
 capIn.addEventListener('input',previewCap);
 capIn.addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('capSave').click();});
 document.querySelectorAll('.ex').forEach(b=>b.addEventListener('click',()=>{capIn.value=b.textContent;previewCap();}));
@@ -295,6 +314,11 @@ function clearCap(){drafts=[];capIn.value='';window._pendingPhoto=null;document.
 document.getElementById('capSave').addEventListener('click',()=>{stopVoice();previewCap();if(!drafts.length){alert('Chưa thấy số tiền — chị nói/gõ kèm số nhé (vd 35k cà phê)');return;}const needR=drafts.filter(d=>d.needReview);if(needR.length===1&&drafts.length===1){openSheet(drafts[0]);return;}drafts.forEach((d,i)=>txns.push({...d,photo:i===0?window._pendingPhoto||null:null,ts:Date.now()}));save();clearCap();refresh();go('home');});
 document.getElementById('search').addEventListener('input',renderTxnList);
 
+function addSugg(){document.querySelectorAll('#capPreview .draftcard').forEach((el,i)=>{const d=drafts[i];if(!d||d.catConf>=.9)return;
+ const opts=[...new Set([...(d.alts||[]),...CATS.map(x=>x[0]).filter(catOn)])].filter(c=>c!==d.cat).slice(0,4);
+ const box=document.createElement('div');box.style.cssText='margin-top:8px;font-size:13px';
+ box.innerHTML='<div class="sub" style="margin-bottom:4px">Chưa chắc mục này — chị chạm chọn đúng mục nhé:</div>'+[d.cat,...opts].map(c=>'<button class="chip" style="margin:2px;border:1px solid #ccc;cursor:pointer" data-c="'+c+'">'+c+'</button>').join('');
+ box.querySelectorAll('button').forEach(bt=>bt.onclick=()=>{learnFrom(d.src||d.desc,bt.dataset.c,d.person);previewCap();});el.appendChild(box);});}
 // confirm sheet
 let sheetDraft=null;
 function openSheet(d){sheetDraft={...d};document.getElementById('sheetAmt').textContent=VND(d.amount);document.getElementById('sheetWarn').innerHTML=d.needReview?'<span class="chip warn">⚠ Kiểm tra số tiền trước khi lưu</span>':'';document.getElementById('sheetFields').innerHTML=[['Mô tả',d.desc],['Danh mục',d.cat],['Người',d.person||'—'],['Loại',d.type]].map(r=>`<div class="row"><span class="sub">${r[0]}</span><span>${r[1]}</span></div>`).join('');document.getElementById('sheet').classList.add('on');}
@@ -378,7 +402,7 @@ function editTxn(id){const t=txns.find(x=>x.id===id);if(!t)return;editId=id;
  document.getElementById('editSheet').classList.add('on');}
 function closeEdit(){document.getElementById('editSheet').classList.remove('on');editId=null;}
 function saveEdit(){const t=txns.find(x=>x.id===editId);if(!t)return closeEdit();const raw=document.getElementById('eAmt').value.trim();let v=/^\d+$/.test(raw)?parseInt(raw):(parseAmounts(raw)[0]||{}).value;if(!v){alert('Số tiền chưa đúng — vd 35000 hoặc 35k');return;}
- t.amount=v;t.desc=document.getElementById('eDesc').value.trim()||t.desc;t.cat=document.getElementById('eCat').value;t.person=document.getElementById('ePerson').value||null;t.type=document.getElementById('eType').value;t.needReview=false;save();closeEdit();refresh();}
+ t.amount=v;t.desc=document.getElementById('eDesc').value.trim()||t.desc;t.cat=document.getElementById('eCat').value;t.person=document.getElementById('ePerson').value||null;t.type=document.getElementById('eType').value;t.needReview=false;learnFrom(t.src||t.desc,t.cat,t.person);save();closeEdit();refresh();}
 function deleteTxn(){if(!confirm('Xoá giao dịch này?'))return;txns=txns.filter(x=>x.id!==editId);save();closeEdit();refresh();}
 
 refresh();
